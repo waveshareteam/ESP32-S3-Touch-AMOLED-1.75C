@@ -1,0 +1,6 @@
+## IDF Component Manager Manifest File
+dependencies:
+  lvgl/lvgl:
+    version: "^9.*"
+    public: true
+  espressif/esp-dsp: '*'

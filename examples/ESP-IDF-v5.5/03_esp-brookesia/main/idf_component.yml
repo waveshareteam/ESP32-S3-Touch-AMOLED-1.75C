@@ -1,0 +1,3 @@
+## IDF Component Manager Manifest File
+dependencies:
+  waveshare/esp32_s3_touch_amoled_1_75c: "*"

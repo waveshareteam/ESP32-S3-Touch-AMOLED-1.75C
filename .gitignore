@@ -1,0 +1,14 @@
+**/.git/
+
+**/.gitmodules
+**/.gitattributes
+**/.gitkeep
+**/.vscode
+**/.gitindex
+**/.gitlog
+**/.git-*
+**/.idea
+**/build
+**/managed_components
+**/dependencies.lock
+**/sdkconfig
