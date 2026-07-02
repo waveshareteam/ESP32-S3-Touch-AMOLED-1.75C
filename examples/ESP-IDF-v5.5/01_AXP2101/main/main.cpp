@@ -37,13 +37,11 @@ static void IRAM_ATTR pmu_irq_handler(void *arg) {
 
 // I2C init with new API
 esp_err_t i2c_init() {
-    i2c_master_bus_config_t bus_config = {
-        .i2c_port = I2C_MASTER_NUM,
-        .sda_io_num = I2C_MASTER_SDA_IO,
-        .scl_io_num = I2C_MASTER_SCL_IO,
-        .clk_source = I2C_CLK_SRC_DEFAULT,
-        
-    };
+    i2c_master_bus_config_t bus_config = {};
+    bus_config.i2c_port = I2C_MASTER_NUM;
+    bus_config.sda_io_num = I2C_MASTER_SDA_IO;
+    bus_config.scl_io_num = I2C_MASTER_SCL_IO;
+    bus_config.clk_source = I2C_CLK_SRC_DEFAULT;
 
     i2c_new_master_bus(&bus_config, &i2c_bus_handle);
 

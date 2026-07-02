@@ -3,5 +3,5 @@ dependencies:
   waveshare/esp32_s3_touch_amoled_1_75c:
     version: "*"
   lvgl/lvgl:
-    version: "9.*"
+    version: "9.5.0"
     public: true

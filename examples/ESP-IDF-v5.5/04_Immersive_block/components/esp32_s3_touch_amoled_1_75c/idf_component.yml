@@ -1,4 +1,8 @@
 dependencies:
+  espressif/usb:
+    version: "^1.4.1"
+    rules:
+      - if: "idf_version >= 6.0"
   esp_codec_dev:
     version: "~1.5"
     public: true
@@ -8,7 +12,8 @@ dependencies:
     public: true
     version: "*"
   idf: '>=5.5'
-  lvgl/lvgl: '>=8,<10'
+  lvgl/lvgl:
+    version: "9.5.0"
   esp_lcd_panel_io_additions: "^1"
 description: Board Support Package (BSP) for Waveshare ESP32-S3-Touch-AMOLED-1.75C
 tags:
