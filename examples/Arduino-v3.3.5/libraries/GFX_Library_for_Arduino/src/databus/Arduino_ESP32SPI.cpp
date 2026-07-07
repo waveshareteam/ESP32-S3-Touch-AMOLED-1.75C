@@ -68,6 +68,12 @@ static spi_t _spi_bus_array[] = {
 };
 #endif
 
+#if defined(ESP_ARDUINO_VERSION_MAJOR) && defined(ESP_ARDUINO_VERSION_MINOR) && ((ESP_ARDUINO_VERSION_MAJOR > 3) || (ESP_ARDUINO_VERSION_MAJOR == 3 && ESP_ARDUINO_VERSION_MINOR >= 3))
+#define GFX_SPI_CLOCK_DIV(spi, freq) spiFrequencyToClockDiv((spi), (freq))
+#else
+#define GFX_SPI_CLOCK_DIV(spi, freq) spiFrequencyToClockDiv((freq))
+#endif
+
 /**
  * @brief Arduino_ESP32SPI
  *
@@ -121,7 +127,7 @@ static void _on_apb_change(void *arg, apb_change_ev_t ev_type, uint32_t old_apb,
   }
   else
   {
-    _spi->dev->clock.val = spiFrequencyToClockDiv(old_apb / ((_spi->dev->clock.clkdiv_pre + 1) * (_spi->dev->clock.clkcnt_n + 1)));
+    _spi->dev->clock.val = GFX_SPI_CLOCK_DIV(_spi, old_apb / ((_spi->dev->clock.clkdiv_pre + 1) * (_spi->dev->clock.clkcnt_n + 1)));
     SPI_MUTEX_UNLOCK();
   }
 }
@@ -166,9 +172,11 @@ bool Arduino_ESP32SPI::begin(int32_t speed, int8_t dataMode)
   _speed = (speed == GFX_NOT_DEFINED) ? SPI_DEFAULT_FREQ : speed;
   _dataMode = (dataMode == GFX_NOT_DEFINED) ? SPI_MODE0 : dataMode;
 
+  _spi = &_spi_bus_array[_spi_num];
+
   if (!_div)
   {
-    _div = spiFrequencyToClockDiv(_speed);
+    _div = GFX_SPI_CLOCK_DIV(_spi, _speed);
   }
 
   // set pin mode
@@ -230,7 +238,6 @@ bool Arduino_ESP32SPI::begin(int32_t speed, int8_t dataMode)
 
   // SPI.begin(_sck, _miso, _mosi);
   // _spi = spiStartBus(_spi_num, _div, SPI_MODE0, SPI_MSBFIRST);
-  _spi = &_spi_bus_array[_spi_num];
 
 #if !CONFIG_DISABLE_HAL_LOCKS
   if (_spi->lock == NULL)

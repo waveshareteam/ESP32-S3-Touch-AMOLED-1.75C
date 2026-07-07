@@ -1,32 +1,40 @@
 # Continuous Integration
 
-This repository validates first-party examples with GitHub Actions.
+The repository uses `.github/workflows/examples.yml` to build first-party ESP-IDF and Arduino examples.
 
-## ESP-IDF
+`scripts/discover_examples.py` creates the build matrix for both surfaces:
 
-The ESP-IDF workflow discovers projects under the current ESP-IDF example root and any source firmware roots that contain a real ESP-IDF project entry point. It builds each selected project for `esp32s3` with the pinned CI matrix:
+- ESP-IDF examples under `examples/ESP-IDF-v5.5/`
+- Arduino sketches under `examples/Arduino-v3.3.5/examples/`
+
+Bundled Arduino library examples under `examples/Arduino-v3.3.5/libraries/` are intentionally excluded from product CI.
+
+## Versions
+
+The current CI matrix uses:
 
 - ESP-IDF `v5.5.4`
 - ESP-IDF `v6.0.2`
-
-Factory binary folders are not source projects and are not built by CI.
-
-## Arduino
-
-The Arduino workflow discovers first-party sketches under `examples/Arduino-v3.3.5/examples/` and compiles them with:
-
 - Arduino-ESP32 core `3.3.10`
-- FQBN `esp32:esp32:esp32s3`
-- Bundled libraries from `examples/Arduino-v3.3.5/libraries/`
+- Arduino FQBN `esp32:esp32:esp32s3`
 
-Examples inside bundled libraries are intentionally excluded from product CI. They belong to the bundled libraries, not to this product example set.
+## Build Artifacts
 
-## Dispatch Inputs
+Each successful source build is packaged by `releases/package_firmware.py` and uploaded as a GitHub Actions artifact. Firmware packages include a manifest, flash helper scripts, flash arguments, and binaries under `bin/`.
 
-Both workflows accept `all`, a directory name, or a repo-relative path through `workflow_dispatch`.
+Checked-in factory binaries under `Firmware/` are recovery artifacts and are not rebuilt or re-uploaded by CI.
 
-Use `all` before release checks or after changing shared CI scripts, bundled libraries, or shared configuration files.
+## Manual Dispatch
 
-## Validation Policy
+Use `workflow_dispatch` with `target=all`, an example directory name, or a repo-relative example path.
 
-Local builds are intentionally not required for repository maintenance changes. Build validation should run through GitHub Actions so the same toolchains, versions, and matrices are used for pull requests and branch updates.
+Examples:
+
+```text
+all
+02_lvgl_demo_v9
+examples/ESP-IDF-v5.5/02_lvgl_demo_v9
+examples/Arduino-v3.3.5/examples/01_HelloWorld
+```
+
+Build validation should run through GitHub Actions so pull requests and branch updates use the same toolchains and matrix.
