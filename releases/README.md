@@ -59,3 +59,9 @@ python3 releases/download_artifacts.py --clean
 The extracted firmware is written to `releases/downloads/run-<run-id>/`. Each artifact gets its own folder with `flash.sh`, `flash.bat`, `manifest.json`, and `bin/` ready for flashing.
 
 Use `--artifact <name>` to download one firmware package, or `--pattern "firmware-esp-idf-*v6.0.2"` to filter by glob pattern. The script uses `GH_TOKEN`, `GITHUB_TOKEN`, or `gh auth token` for GitHub artifact access. When GitHub CLI is installed, artifact downloads use `gh run download` so `gh auth login` can be reused directly.
+
+## Flashing CI Firmware
+
+Flash from the extracted artifact directory with the included `flash.sh` or `flash.bat` helper so the bootloader, partition table, and application image come from the same CI run.
+
+When collecting runtime logs or decoding a panic, make sure the board was flashed from the same artifact and framework version being diagnosed. A checksum mismatch warning means the monitor is comparing against a different build; reflash the selected artifact before treating the backtrace as current.

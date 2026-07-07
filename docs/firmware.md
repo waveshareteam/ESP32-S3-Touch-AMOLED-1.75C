@@ -9,3 +9,5 @@ CI build outputs are packaged by `releases/package_firmware.py` and uploaded as 
 Use `releases/download_artifacts.py` to download firmware artifacts from a completed Actions run into `releases/downloads/`.
 
 Generated archives, downloaded artifacts, and build outputs stay out of source control.
+
+For runtime validation, flash the complete CI-generated package from one artifact directory. Mixing binaries from different runs or monitoring with symbols from another build can produce checksum mismatch warnings and misleading panic backtraces.

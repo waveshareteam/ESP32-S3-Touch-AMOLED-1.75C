@@ -12,7 +12,7 @@
 #include "bsp/display.h"
 #include "driver/gpio.h"
 
-#ifdef M_PI
+#if defined(M_PI)
 #undef M_PI
 #endif
 #include "qmi8658.h"
@@ -45,7 +45,7 @@ typedef struct {
 
 #define SCREEN_WIDTH_MM  33.09f
 #define SCREEN_HEIGHT_MM 41.51f
-#define CORNER_RADIUS_MM 0.2f
+#define CORNER_RADIUS_MM 9.2f
 
 static float accel_bias_x = 0.0f;
 static float accel_bias_y = 0.0f;
@@ -419,7 +419,8 @@ void app_main(void) {
     bsp_display_unlock();
 
     bus_handle = bsp_i2c_get_handle();
-    qmi8658_dev_t *dev = malloc(sizeof(qmi8658_dev_t));
+    qmi8658_dev_t *dev = calloc(1, sizeof(qmi8658_dev_t));
+    ESP_ERROR_CHECK(dev ? ESP_OK : ESP_ERR_NO_MEM);
     ESP_ERROR_CHECK(qmi8658_init(dev, bus_handle, QMI8658_ADDRESS_HIGH));
 
     qmi8658_set_accel_range(dev, QMI8658_ACCEL_RANGE_8G);

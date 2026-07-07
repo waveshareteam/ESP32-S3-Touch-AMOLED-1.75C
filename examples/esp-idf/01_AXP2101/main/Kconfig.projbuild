@@ -1,27 +1,14 @@
-menu "XPowersLib Configuration"
-
-    choice PMU_Type
-        prompt "XPowers chip type"
-        default XPOWERS_CHIP_AXP2101 if IDF_TARGET_ESP32
-        default XPOWERS_CHIP_AXP2101
-        help
-            Defines the default peripheral for xpowers example
-
-        config XPOWERS_CHIP_AXP2101
-            bool "Xpowers AXP2101"
-        config XPOWERS_CHIP_AXP192
-            bool "Xpowers AXP192"
-    endchoice
+menu "AXP2101 PMU Configuration"
 
     config I2C_MASTER_PORT_NUM
         int "PMU I2C Port Number"
-        default 0
+        default 1
         help
             Port number for I2C Master device.
 
     config I2C_MASTER_FREQUENCY
         int "Master Frequency"
-        default 400000
+        default 100000
         help
             I2C Speed of Master device.
 
@@ -36,12 +23,5 @@ menu "XPowersLib Configuration"
         default 15
         help
             GPIO number for I2C PMU data line.
-
-    config PMU_INTERRUPT_PIN
-        int "PMU Interrupt Pin"
-        default -1
-        help
-            PMU interrupt pin.
-
 
 endmenu

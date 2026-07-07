@@ -15,3 +15,4 @@
 release-artifacts/
 releases/dist/
 releases/downloads/
+**/__pycache__/
