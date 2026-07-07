@@ -12,3 +12,6 @@
 **/managed_components
 **/dependencies.lock
 **/sdkconfig
+release-artifacts/
+releases/dist/
+releases/downloads/

@@ -8,6 +8,14 @@ ESP32-S3-Touch-AMOLED-1.75C ESP32-S3 1.75Cinch AMOLED Touch Watch Development Bo
 
 You can find detailed configuration information on the product wiki page
 
+## Examples
+
+- ESP-IDF examples are under `examples/ESP-IDF-v5.5/`.
+- First-party Arduino sketches are under `examples/Arduino-v3.3.5/examples/`.
+- Bundled Arduino libraries are under `examples/Arduino-v3.3.5/libraries/`.
+- Factory firmware binaries are under `Firmware/` and are documented as recovery artifacts.
+
+See `docs/repository-structure.md`, `docs/ci.md`, and `docs/firmware.md` for maintainer notes.
 ---
 
 ## 🛠️ Contributing
