@@ -7,10 +7,10 @@ This directory contains helper scripts for packaging build outputs into flashabl
 Build an example first, then package the generated build directory:
 
 ```bash
-idf.py -C examples/ESP-IDF-v5.5/02_lvgl_demo_v9 -B build/02_lvgl_demo_v9-v6.0.2 set-target esp32s3 build
+idf.py -C examples/esp-idf/02_lvgl_demo_v9 -B build/02_lvgl_demo_v9-v6.0.2 set-target esp32s3 build
 python3 releases/package_firmware.py \
   --framework esp-idf \
-  --project examples/ESP-IDF-v5.5/02_lvgl_demo_v9 \
+  --project examples/esp-idf/02_lvgl_demo_v9 \
   --build-dir build/02_lvgl_demo_v9-v6.0.2 \
   --name ESP32-S3-Touch-AMOLED-1.75C-02_lvgl_demo_v9-v6.0.2 \
   --framework-version v6.0.2 \
@@ -26,14 +26,14 @@ Export binaries into a stable output directory, then package them:
 ```bash
 arduino-cli compile \
   --fqbn esp32:esp32:esp32s3 \
-  --libraries examples/Arduino-v3.3.5/libraries \
+  --libraries examples/arduino/libraries \
   --export-binaries \
   --output-dir build/01_HelloWorld-3.3.10 \
-  examples/Arduino-v3.3.5/examples/01_HelloWorld
+  examples/arduino/examples/01_HelloWorld
 
 python3 releases/package_firmware.py \
   --framework arduino \
-  --project examples/Arduino-v3.3.5/examples/01_HelloWorld \
+  --project examples/arduino/examples/01_HelloWorld \
   --build-dir build/01_HelloWorld-3.3.10 \
   --name ESP32-S3-Touch-AMOLED-1.75C-01_HelloWorld-arduino-3.3.10 \
   --framework-version 3.3.10 \

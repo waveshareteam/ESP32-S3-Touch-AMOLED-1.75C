@@ -4,10 +4,10 @@ The repository uses `.github/workflows/examples.yml` to build first-party ESP-ID
 
 `scripts/discover_examples.py` creates the build matrix for both surfaces:
 
-- ESP-IDF examples under `examples/ESP-IDF-v5.5/`
-- Arduino sketches under `examples/Arduino-v3.3.5/examples/`
+- ESP-IDF examples under `examples/esp-idf/`
+- Arduino sketches under `examples/arduino/examples/`
 
-Bundled Arduino library examples under `examples/Arduino-v3.3.5/libraries/` are intentionally excluded from product CI.
+Bundled Arduino library examples under `examples/arduino/libraries/` are intentionally excluded from product CI.
 
 ## Versions
 
@@ -33,8 +33,8 @@ Examples:
 ```text
 all
 02_lvgl_demo_v9
-examples/ESP-IDF-v5.5/02_lvgl_demo_v9
-examples/Arduino-v3.3.5/examples/01_HelloWorld
+examples/esp-idf/02_lvgl_demo_v9
+examples/arduino/examples/01_HelloWorld
 ```
 
 Build validation should run through GitHub Actions so pull requests and branch updates use the same toolchains and matrix.

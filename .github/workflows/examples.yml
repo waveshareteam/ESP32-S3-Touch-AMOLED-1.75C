@@ -12,16 +12,16 @@ on:
       - "scripts/discover_examples.py"
       - "releases/**"
       - "config/**"
-      - "examples/ESP-IDF-v5.5/**"
-      - "examples/Arduino-v3.3.5/**"
+      - "examples/esp-idf/**"
+      - "examples/arduino/**"
   pull_request:
     paths:
       - ".github/workflows/examples.yml"
       - "scripts/discover_examples.py"
       - "releases/**"
       - "config/**"
-      - "examples/ESP-IDF-v5.5/**"
-      - "examples/Arduino-v3.3.5/**"
+      - "examples/esp-idf/**"
+      - "examples/arduino/**"
   workflow_dispatch:
     inputs:
       target:
@@ -130,7 +130,7 @@ jobs:
           cp -R "${{ matrix.path }}/." "$normalized_sketch/"
           arduino-cli compile \
             --fqbn "${{ matrix.fqbn }}" \
-            --libraries examples/Arduino-v3.3.5/libraries \
+            --libraries examples/arduino/libraries \
             --export-binaries \
             --output-dir "build/${{ matrix.name }}-${{ matrix.core }}" \
             "$normalized_sketch"

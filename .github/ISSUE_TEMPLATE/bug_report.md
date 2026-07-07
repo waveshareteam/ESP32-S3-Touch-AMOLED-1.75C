@@ -12,7 +12,7 @@ Describe the problem.
 
 ## Example Path
 
-Provide the repo-relative example path, such as `examples/ESP-IDF-v5.5/01_AXP2101`.
+Provide the repo-relative example path, such as `examples/esp-idf/01_AXP2101`.
 
 ## Environment
 
