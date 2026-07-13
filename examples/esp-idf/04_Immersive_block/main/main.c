@@ -339,7 +339,7 @@ static void shapes_update_task(void *arg) {
                 int move_x = (int)(data.accelY * ACCEL_SCALE_FACTOR);
                 int move_y = (int)(data.accelX * ACCEL_SCALE_FACTOR);
                 
-                bsp_display_lock(pdMS_TO_TICKS(100));
+                bsp_display_lock(-1);
                 
                 for (int i = 0; i < shape_count; i++) {
                     int new_x = shapes[i].x_pos + move_x;
@@ -412,7 +412,7 @@ void app_main(void) {
         display_height = lv_disp_get_ver_res(disp);
     }
 
-    bsp_display_lock(pdMS_TO_TICKS(200));
+    bsp_display_lock(-1);
     lv_obj_t *calib_label = lv_label_create(lv_screen_active());
     lv_label_set_text(calib_label, "Press BOOT to recalibrate");
     lv_obj_align(calib_label, LV_ALIGN_BOTTOM_MID, 0, -10);
