@@ -18,11 +18,30 @@ using namespace esp_brookesia::gui;
 using namespace esp_brookesia::systems::phone;
 
 constexpr bool EXAMPLE_SHOW_MEM_INFO = false;
+constexpr uint32_t LVGL_TASK_STACK_SIZE = 40 * 1024;
 
 extern "C" void app_main(void)
 {
     ESP_UTILS_LOGI("Display ESP-Brookesia phone demo");
-    ESP_UTILS_CHECK_NULL_EXIT(bsp_display_start(), "Start display failed");
+
+    /* Brookesia screen creation exceeds the adapter's 8 KB default on this board. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+    esp_lv_adapter_config_t lv_adapter_config = ESP_LV_ADAPTER_DEFAULT_CONFIG();
+#pragma GCC diagnostic pop
+    lv_adapter_config.task_stack_size = LVGL_TASK_STACK_SIZE;
+    lv_adapter_config.stack_in_psram = true;
+
+    bsp_display_cfg_t display_config = {};
+    display_config.lv_adapter_cfg = lv_adapter_config;
+    display_config.rotation = ESP_LV_ADAPTER_ROTATE_0;
+    display_config.tear_avoid_mode = ESP_LV_ADAPTER_TEAR_AVOID_MODE_NONE;
+    display_config.touch_flags.mirror_x = 1;
+    display_config.touch_flags.mirror_y = 1;
+
+    ESP_UTILS_CHECK_NULL_EXIT(
+        bsp_display_start_with_config(&display_config), "Start display failed"
+    );
     ESP_UTILS_CHECK_ERROR_EXIT(bsp_display_backlight_on(), "Turn on display backlight failed");
 
     /* Configure GUI lock */

@@ -3,6 +3,4 @@ dependencies:
   lvgl/lvgl:
     version: "9.5.0"
   waveshare/esp32_s3_touch_amoled_1_75c:
-    git: https://github.com/waveshareteam/Waveshare-ESP32-components.git
-    path: bsp/esp32_s3_touch_amoled_1_75c
-    version: 0abe296248a349b32df5e07aa064921c2758c58a
+    version: "^3.0.0"

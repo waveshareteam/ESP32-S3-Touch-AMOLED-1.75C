@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import shutil
@@ -60,7 +61,7 @@ def copy_file(src: Path, firmware_dir: Path, offset: str | None = None) -> str:
     return f"bin/{dst_name}"
 
 
-def esp_idf_flash_entries(build_dir: Path, firmware_dir: Path) -> tuple[list[str], list[dict[str, str]], dict]:
+def esp_idf_flash_entries(build_dir: Path, firmware_dir: Path) -> tuple[list[str], list[dict[str, object]], dict]:
     flasher_args_path = build_dir / "flasher_args.json"
     if not flasher_args_path.exists():
         raise FileNotFoundError(f"missing ESP-IDF flasher args: {flasher_args_path}")
@@ -70,7 +71,7 @@ def esp_idf_flash_entries(build_dir: Path, firmware_dir: Path) -> tuple[list[str
     if not isinstance(flash_files, dict) or not flash_files:
         raise ValueError(f"no flash_files found in {flasher_args_path}")
 
-    entries: list[dict[str, str]] = []
+    entries: list[dict[str, object]] = []
     command_pairs: list[str] = []
     for offset, rel_path in sorted(flash_files.items(), key=lambda item: parse_offset(item[0])):
         src = Path(rel_path)
@@ -85,7 +86,7 @@ def esp_idf_flash_entries(build_dir: Path, firmware_dir: Path) -> tuple[list[str
     return command_pairs, entries, data
 
 
-def arduino_flash_entries(build_dir: Path, firmware_dir: Path) -> tuple[list[str], list[dict[str, str]]]:
+def arduino_flash_entries(build_dir: Path, firmware_dir: Path) -> tuple[list[str], list[dict[str, object]]]:
     bins = sorted(build_dir.rglob("*.bin"), key=lambda path: path.as_posix().lower())
     if not bins:
         raise FileNotFoundError(f"no Arduino .bin files found in {build_dir}")
@@ -110,7 +111,7 @@ def arduino_flash_entries(build_dir: Path, firmware_dir: Path) -> tuple[list[str
     if not selected:
         raise ValueError(f"could not infer Arduino flash layout from {build_dir}")
 
-    entries: list[dict[str, str]] = []
+    entries: list[dict[str, object]] = []
     command_pairs: list[str] = []
     for offset, src in sorted(selected, key=lambda item: parse_offset(item[0])):
         copied = copy_file(src, firmware_dir, offset)
@@ -146,7 +147,55 @@ def batch_command(parts: Iterable[str]) -> str:
     return " ".join("%PORT%" if part == "$PORT" else quote_batch(part) for part in parts)
 
 
-def write_flash_helpers(package_dir: Path, command: list[str], artifact_name: str) -> None:
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def write_fill(output, length: int) -> None:
+    chunk = b"\xff" * min(length, 1024 * 1024)
+    remaining = length
+    while remaining:
+        size = min(remaining, len(chunk))
+        output.write(chunk[:size])
+        remaining -= size
+
+
+def create_combined_binary(
+    package_dir: Path, firmware_dir: Path, entries: list[dict[str, object]], artifact_name: str
+) -> dict[str, object]:
+    combined_name = f"{artifact_name}-combined.bin"
+    combined_path = firmware_dir / combined_name
+    cursor = 0
+
+    with combined_path.open("wb") as output:
+        for entry in sorted(entries, key=lambda item: parse_offset(str(item["offset"]))):
+            offset = parse_offset(str(entry["offset"]))
+            source = package_dir / str(entry["file"])
+            size = source.stat().st_size
+            if offset < cursor:
+                raise ValueError(
+                    f"firmware regions overlap at {entry['offset']}: {entry['file']} starts before 0x{cursor:x}"
+                )
+            write_fill(output, offset - cursor)
+            with source.open("rb") as source_file:
+                shutil.copyfileobj(source_file, output)
+            entry["size"] = size
+            entry["sha256"] = sha256_file(source)
+            cursor = offset + size
+
+    return {
+        "offset": "0x0",
+        "file": f"bin/{combined_name}",
+        "size": combined_path.stat().st_size,
+        "sha256": sha256_file(combined_path),
+    }
+
+
+def write_command_helpers(package_dir: Path, stem: str, command: list[str]) -> None:
     shell = f"""#!/usr/bin/env sh
 set -eu
 PORT="${{1:-}}"
@@ -160,16 +209,23 @@ cd "$(dirname "$0")"
     batch = f"""@echo off
 set PORT=%1
 if "%PORT%"=="" (
-  echo Usage: flash.bat COMx
+  echo Usage: {stem}.bat COMx
   exit /b 2
 )
 cd /d %~dp0
 {batch_command(command)}
 """
     args_txt = " ".join("<PORT>" if part == "$PORT" else part for part in command) + "\n"
-    write_text(package_dir / "flash.sh", shell, executable=True)
-    write_text(package_dir / "flash.bat", batch)
-    write_text(package_dir / "flash_args.txt", args_txt)
+    write_text(package_dir / f"{stem}.sh", shell, executable=True)
+    write_text(package_dir / f"{stem}.bat", batch)
+    write_text(package_dir / f"{stem}_args.txt", args_txt)
+
+
+def write_flash_helpers(
+    package_dir: Path, split_command: list[str], combined_command: list[str], artifact_name: str
+) -> None:
+    write_command_helpers(package_dir, "flash", split_command)
+    write_command_helpers(package_dir, "flash_combined", combined_command)
     write_text(
         package_dir / "README.md",
         f"""# {artifact_name}
@@ -180,7 +236,26 @@ Install esptool if needed:
 python -m pip install esptool
 ```
 
-Flash from this directory:
+## Combined firmware (recommended)
+
+Flash the single combined image from this directory:
+
+```bash
+./flash_combined.sh /dev/ttyUSB0
+```
+
+On Windows:
+
+```bat
+flash_combined.bat COMx
+```
+
+The combined image is written at offset `0x0`. The equivalent complete command is recorded in
+`flash_combined_args.txt`.
+
+## Split firmware
+
+The original offset-addressed binaries are also included. Flash them with:
 
 ```bash
 ./flash.sh /dev/ttyUSB0
@@ -191,6 +266,9 @@ On Windows:
 ```bat
 flash.bat COMx
 ```
+
+The split-image command is recorded in `flash_args.txt`. Use firmware built for this exact board;
+mixing bootloaders, partition tables, and applications from different packages is not supported.
 """,
     )
 
@@ -232,6 +310,12 @@ def package(args: argparse.Namespace) -> Path:
         write_flash_args = []
 
     command = build_esptool_prefix(chip, before, after) + write_flash_args + command_pairs
+    combined_bin = create_combined_binary(package_dir, firmware_dir, files, artifact_name)
+    combined_command = (
+        build_esptool_prefix(chip, before, after)
+        + write_flash_args
+        + [str(combined_bin["offset"]), str(combined_bin["file"])]
+    )
     manifest = {
         "name": artifact_name,
         "framework": args.framework,
@@ -242,13 +326,17 @@ def package(args: argparse.Namespace) -> Path:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "baud": DEFAULT_BAUD,
         "files": files,
+        "combined_bin": combined_bin,
         "flash_command": " ".join("<PORT>" if item == "$PORT" else item for item in command),
+        "combined_flash_command": " ".join(
+            "<PORT>" if item == "$PORT" else item for item in combined_command
+        ),
     }
     write_text(package_dir / "manifest.json", json.dumps(manifest, indent=2) + "\n")
-    write_flash_helpers(package_dir, command, artifact_name)
+    write_flash_helpers(package_dir, command, combined_command, artifact_name)
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    zip_path = output_dir / f"{artifact_name}.zip"
+    zip_path = output_dir / f"{artifact_name}-combined.zip"
     create_zip(package_dir, zip_path)
     print(zip_path.as_posix())
     return zip_path
