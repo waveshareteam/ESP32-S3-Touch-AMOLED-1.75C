@@ -12,7 +12,8 @@
 #include "bsp/display.h"
 #include "driver/gpio.h"
 
-#if defined(M_PI)
+/* qmi8658.h defines M_PI; IDF v6 picolibc already provides it. */
+#ifdef M_PI
 #undef M_PI
 #endif
 #include "qmi8658.h"
@@ -39,9 +40,13 @@ typedef struct {
 #define MAX_SHAPES 15
 #define MIN_SHAPE_SIZE 15
 #define MAX_SHAPE_SIZE 30
+#define MAX_TOTAL_PLACEMENT_ATTEMPTS (MAX_SHAPES * 20)
 #define ACCEL_SCALE_FACTOR 5
-#define TASK_DELAY_MS 20
+#define TASK_DELAY_MS 33
+#define DISPLAY_LOCK_TIMEOUT_MS (-1)
 #define CALIBRATION_DEADZONE 0.05f
+#define CALIBRATION_SAMPLES 200
+#define CALIBRATION_MAX_RETRIES 5
 
 #define SCREEN_WIDTH_MM  33.09f
 #define SCREEN_HEIGHT_MM 41.51f
@@ -50,9 +55,9 @@ typedef struct {
 static float accel_bias_x = 0.0f;
 static float accel_bias_y = 0.0f;
 static bool calibration_done = false;
-static bool recalibration_requested = false;
-static int display_width = 0;
-static int display_height = 0;
+static volatile bool recalibration_requested = false;
+static int display_width = BSP_LCD_H_RES;
+static int display_height = BSP_LCD_V_RES;
 static Shape shapes[MAX_SHAPES];
 static int shape_count = 0;
 
@@ -113,23 +118,33 @@ lv_obj_t *create_shape_obj(ShapeType type, int size, lv_color_t color) {
 void generate_random_shapes() {
     srand(time(NULL));
     shape_count = 0;
+    int placement_attempts = 0;
+
+    if (display_width <= (2 * MAX_SHAPE_SIZE) || display_height <= (2 * MAX_SHAPE_SIZE)) {
+        ESP_LOGE(TAG, "Display size %dx%d is too small for shape generation",
+                 display_width, display_height);
+        return;
+    }
     
-    while (shape_count < MAX_SHAPES) {
-        Shape new_shape;
+    while (shape_count < MAX_SHAPES && placement_attempts < MAX_TOTAL_PLACEMENT_ATTEMPTS) {
+        Shape new_shape = {0};
         new_shape.type = rand() % SHAPE_COUNT;
         new_shape.radius = MIN_SHAPE_SIZE + rand() % (MAX_SHAPE_SIZE - MIN_SHAPE_SIZE + 1);
-        new_shape.color = get_random_color();
-        
-        new_shape.obj = create_shape_obj(new_shape.type, new_shape.radius, new_shape.color);
-        if (!new_shape.obj) continue;
         
         bool valid_position = false;
-        int attempts = 0;
-        
-        while (!valid_position && attempts < 100) {
-            new_shape.x_pos = new_shape.radius + rand() % (display_width - 2 * new_shape.radius);
-            new_shape.y_pos = new_shape.radius + rand() % (display_height - 2 * new_shape.radius);
-            
+        for (int attempts = 0;
+             attempts < 100 && placement_attempts < MAX_TOTAL_PLACEMENT_ATTEMPTS;
+             attempts++) {
+            placement_attempts++;
+            int x_range = display_width - 2 * new_shape.radius;
+            int y_range = display_height - 2 * new_shape.radius;
+            if (x_range <= 0 || y_range <= 0) {
+                break;
+            }
+
+            new_shape.x_pos = new_shape.radius + rand() % x_range;
+            new_shape.y_pos = new_shape.radius + rand() % y_range;
+
             valid_position = true;
             for (int i = 0; i < shape_count; i++) {
                 if (check_overlap(&new_shape, &shapes[i])) {
@@ -137,60 +152,93 @@ void generate_random_shapes() {
                     break;
                 }
             }
-            attempts++;
+
+            if (valid_position) {
+                break;
+            }
         }
         
-        if (valid_position) {
-            lv_obj_set_pos(new_shape.obj, new_shape.x_pos - new_shape.radius, 
-                          new_shape.y_pos - new_shape.radius);
-            shapes[shape_count] = new_shape;
-            shape_count++;
-        } else {
-            lv_obj_del(new_shape.obj);
+        if (!valid_position) {
+            continue;
         }
+
+        new_shape.color = get_random_color();
+        new_shape.obj = create_shape_obj(new_shape.type, new_shape.radius, new_shape.color);
+        if (!new_shape.obj) {
+            ESP_LOGW(TAG, "Failed to create shape object");
+            continue;
+        }
+
+        lv_obj_set_pos(new_shape.obj, new_shape.x_pos - new_shape.radius,
+                       new_shape.y_pos - new_shape.radius);
+        shapes[shape_count] = new_shape;
+        shape_count++;
+    }
+    if (shape_count < MAX_SHAPES) {
+        ESP_LOGW(TAG, "Placed only %d/%d shapes after %d attempts", shape_count,
+                 MAX_SHAPES, placement_attempts);
     }
 }
 
-void perform_level_calibration(qmi8658_dev_t *dev) {
+static esp_err_t perform_level_calibration(qmi8658_dev_t *dev) {
     qmi8658_data_t data;
-    const int CALIB_SAMPLES = 200;
-    float sum_x = 0.0f, sum_y = 0.0f;
-    float max_x = -10.0f, min_x = 10.0f;
-    float max_y = -10.0f, min_y = 10.0f;
-    
+
     ESP_LOGI(TAG, "Starting level calibration...");
     ESP_LOGI(TAG, "Please place device on a level surface");
-    
-    for (int i = 0; i < CALIB_SAMPLES; i++) {
-        if (qmi8658_read_sensor_data(dev, &data) == ESP_OK) {
-            sum_x += data.accelX;
-            sum_y += data.accelY;
-            
-            if (data.accelX > max_x) max_x = data.accelX;
-            if (data.accelX < min_x) min_x = data.accelX;
-            if (data.accelY > max_y) max_y = data.accelY;
-            if (data.accelY < min_y) min_y = data.accelY;
+
+    bool have_calibration = false;
+
+    for (int attempt = 1; attempt <= CALIBRATION_MAX_RETRIES; attempt++) {
+        float sum_x = 0.0f, sum_y = 0.0f;
+        float max_x = -10.0f, min_x = 10.0f;
+        float max_y = -10.0f, min_y = 10.0f;
+        int valid_samples = 0;
+
+        for (int i = 0; i < CALIBRATION_SAMPLES; i++) {
+            if (qmi8658_read_sensor_data(dev, &data) == ESP_OK) {
+                sum_x += data.accelX;
+                sum_y += data.accelY;
+                valid_samples++;
+
+                if (data.accelX > max_x) max_x = data.accelX;
+                if (data.accelX < min_x) min_x = data.accelX;
+                if (data.accelY > max_y) max_y = data.accelY;
+                if (data.accelY < min_y) min_y = data.accelY;
+            }
+            vTaskDelay(pdMS_TO_TICKS(10));
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
+
+        if (valid_samples == 0) {
+            ESP_LOGW(TAG, "Calibration attempt %d/%d read no samples", attempt, CALIBRATION_MAX_RETRIES);
+            continue;
+        }
+
+        float range_x = max_x - min_x;
+        float range_y = max_y - min_y;
+        accel_bias_x = sum_x / valid_samples;
+        accel_bias_y = sum_y / valid_samples;
+        have_calibration = true;
+
+        if (range_x <= 0.1f && range_y <= 0.1f) {
+            calibration_done = true;
+            ESP_LOGI(TAG, "Calibration complete. Bias X: %.4f m/s^2, Bias Y: %.4f m/s^2",
+                     accel_bias_x, accel_bias_y);
+            ESP_LOGI(TAG, "Device is now level. Shapes should be stationary.");
+            return ESP_OK;
+        }
+
+        ESP_LOGW(TAG, "Calibration unstable on attempt %d/%d (X range: %.4f, Y range: %.4f)",
+                 attempt, CALIBRATION_MAX_RETRIES, range_x, range_y);
     }
-    
-    float range_x = max_x - min_x;
-    float range_y = max_y - min_y;
-    
-    if (range_x > 0.1f || range_y > 0.1f) {
-        ESP_LOGW(TAG, "Calibration unstable (X range: %.4f, Y range: %.4f). Retrying...", 
-                 range_x, range_y);
-        perform_level_calibration(dev);
-        return;
+
+    if (!have_calibration) {
+        calibration_done = false;
+        return ESP_FAIL;
     }
-    
-    accel_bias_x = sum_x / CALIB_SAMPLES;
-    accel_bias_y = sum_y / CALIB_SAMPLES;
-    
+
     calibration_done = true;
-    ESP_LOGI(TAG, "Calibration complete. Bias X: %.4f m/s², Bias Y: %.4f m/s²", 
-             accel_bias_x, accel_bias_y);
-    ESP_LOGI(TAG, "Device is now level. Shapes should be stationary.");
+    ESP_LOGW(TAG, "Using the last calibration sample set after unstable readings");
+    return ESP_OK;
 }
 
 void apply_calibration_and_deadzone(qmi8658_data_t *data) {
@@ -309,19 +357,30 @@ void handle_shape_collisions(int index) {
 static void shapes_update_task(void *arg) {
     qmi8658_dev_t *dev = (qmi8658_dev_t *)arg;
     qmi8658_data_t data;
-    
-    while (display_width == 0 || display_height == 0) {
-        display_width = lv_disp_get_hor_res(NULL);
-        display_height = lv_disp_get_ver_res(NULL);
-        vTaskDelay(pdMS_TO_TICKS(100));
+    if (display_width <= 0 || display_height <= 0) {
+        display_width = BSP_LCD_H_RES;
+        display_height = BSP_LCD_V_RES;
     }
-    
-    generate_random_shapes();
+
+    while (shape_count == 0) {
+        if (bsp_display_lock(DISPLAY_LOCK_TIMEOUT_MS) == ESP_OK) {
+            generate_random_shapes();
+            bsp_display_unlock();
+        } else {
+            ESP_LOGW(TAG, "Waiting for display lock before initial shape generation");
+        }
+        if (shape_count == 0) {
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+    }
 
     while (1) {
         if (recalibration_requested) {
             recalibration_requested = false;
-            perform_level_calibration(dev);
+            esp_err_t cal_ret = perform_level_calibration(dev);
+            if (cal_ret != ESP_OK) {
+                ESP_LOGE(TAG, "Recalibration failed: %s", esp_err_to_name(cal_ret));
+            }
         }
         
         bool ready;
@@ -338,10 +397,21 @@ static void shapes_update_task(void *arg) {
                 
                 int move_x = (int)(data.accelY * ACCEL_SCALE_FACTOR);
                 int move_y = (int)(data.accelX * ACCEL_SCALE_FACTOR);
+
+                if (move_x == 0 && move_y == 0) {
+                    vTaskDelay(pdMS_TO_TICKS(TASK_DELAY_MS));
+                    continue;
+                }
                 
-                bsp_display_lock(-1);
+                if (bsp_display_lock(DISPLAY_LOCK_TIMEOUT_MS) != ESP_OK) {
+                    ESP_LOGW(TAG, "Skipping shape update because display lock failed");
+                    vTaskDelay(pdMS_TO_TICKS(TASK_DELAY_MS));
+                    continue;
+                }
                 
                 for (int i = 0; i < shape_count; i++) {
+                    int old_x = shapes[i].x_pos;
+                    int old_y = shapes[i].y_pos;
                     int new_x = shapes[i].x_pos + move_x;
                     int new_y = shapes[i].y_pos + move_y;
                     
@@ -364,10 +434,12 @@ static void shapes_update_task(void *arg) {
                                              CORNER_RADIUS_MM, shapes[i].radius);
                     
                     handle_shape_collisions(i);
-                    
-                    lv_obj_set_pos(shapes[i].obj, 
-                                  shapes[i].x_pos - shapes[i].radius, 
-                                  shapes[i].y_pos - shapes[i].radius);
+
+                    if (shapes[i].x_pos != old_x || shapes[i].y_pos != old_y) {
+                        lv_obj_set_pos(shapes[i].obj,
+                                       shapes[i].x_pos - shapes[i].radius,
+                                       shapes[i].y_pos - shapes[i].radius);
+                    }
                 }
                 
                 bsp_display_unlock();
@@ -405,18 +477,22 @@ void app_main(void) {
     }
     ESP_ERROR_CHECK(ret);
 
-    lv_display_t *disp = bsp_display_start();
-    if (disp) {
-        bsp_display_backlight_on();
-        display_width = lv_disp_get_hor_res(disp);
-        display_height = lv_disp_get_ver_res(disp);
+    if (bsp_display_start() == NULL) {
+        ESP_LOGE(TAG, "Failed to start display");
+        return;
     }
+    bsp_display_backlight_on();
+    display_width = BSP_LCD_H_RES;
+    display_height = BSP_LCD_V_RES;
 
-    bsp_display_lock(-1);
-    lv_obj_t *calib_label = lv_label_create(lv_screen_active());
-    lv_label_set_text(calib_label, "Press BOOT to recalibrate");
-    lv_obj_align(calib_label, LV_ALIGN_BOTTOM_MID, 0, -10);
-    bsp_display_unlock();
+    if (bsp_display_lock(DISPLAY_LOCK_TIMEOUT_MS) == ESP_OK) {
+        lv_obj_t *calib_label = lv_label_create(lv_screen_active());
+        lv_label_set_text(calib_label, "Press BOOT to recalibrate");
+        lv_obj_align(calib_label, LV_ALIGN_BOTTOM_MID, 0, -10);
+        bsp_display_unlock();
+    } else {
+        ESP_LOGW(TAG, "Unable to create calibration label because display lock failed");
+    }
 
     bus_handle = bsp_i2c_get_handle();
     qmi8658_dev_t *dev = calloc(1, sizeof(qmi8658_dev_t));
@@ -431,15 +507,21 @@ void app_main(void) {
 
     init_calibration_button();
 
-    perform_level_calibration(dev);
+    ret = perform_level_calibration(dev);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Initial calibration failed: %s", esp_err_to_name(ret));
+    }
 
-    xTaskCreatePinnedToCore(
-        shapes_update_task, 
-        "shapes_update", 
-        8192, 
-        dev, 
-        3, 
-        NULL, 
-        1
+    BaseType_t task_ret = xTaskCreate(
+        shapes_update_task,
+        "shapes_update",
+        8192,
+        dev,
+        2,
+        NULL
     );
+    if (task_ret != pdPASS) {
+        ESP_LOGE(TAG, "Failed to create shapes update task");
+        free(dev);
+    }
 }
