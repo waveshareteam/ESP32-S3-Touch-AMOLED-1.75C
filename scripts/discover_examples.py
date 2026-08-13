@@ -11,6 +11,10 @@ from pathlib import Path
 ESP_IDF_ROOT = Path("examples/esp-idf")
 ARDUINO_ROOT = Path("examples/arduino/examples")
 ARDUINO_LIBRARY_ROOT = Path("examples/arduino/libraries")
+ARDUINO_FQBN = (
+    "esp32:esp32:esp32s3:FlashSize=16M,PSRAM=opi,FlashMode=qio,"
+    "PartitionScheme=app3M_fat9M_16MB,USBMode=hwcdc,CDCOnBoot=cdc"
+)
 LEGACY_SELECTOR_PREFIXES = (
     ("examples/ESP-IDF-v5.5/", "examples/esp-idf/"),
     ("examples/ESP-IDF/", "examples/esp-idf/"),
@@ -118,7 +122,7 @@ def main() -> None:
     parser.add_argument("--selector", default="all")
     parser.add_argument("--idf-versions", default="v5.5.5,v6.0.2")
     parser.add_argument("--arduino-core", default="3.3.11")
-    parser.add_argument("--fqbn", default="esp32:esp32:esp32s3")
+    parser.add_argument("--fqbn", default=ARDUINO_FQBN)
     parser.add_argument("--github-output")
     args = parser.parse_args()
 

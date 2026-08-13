@@ -15,7 +15,7 @@
 
 ## 验证矩阵
 
-以下版本于 2026-08-10 根据上游发布记录确定：
+以下版本已于 2026-08-13 根据上游发布记录重新验证：
 
 | 框架 | 版本 | 示例数 | 固件产物数 |
 | --- | --- | ---: | ---: |
@@ -23,7 +23,10 @@
 | ESP-IDF | `v6.0.2` | 5 | 5 |
 | Arduino-ESP32 | `3.3.11` | 7 | 7 |
 
-ESP-IDF 目标为 `esp32s3`。Arduino 使用 `esp32:esp32:esp32s3` 和随仓库提供的库。
+ESP-IDF 目标为 `esp32s3`。Arduino 使用
+`esp32:esp32:esp32s3:FlashSize=16M,PSRAM=opi,FlashMode=qio,PartitionScheme=app3M_fat9M_16MB,USBMode=hwcdc,CDCOnBoot=cdc`
+和随仓库提供的库：16 MB Flash、8 MB OPI PSRAM、16 MB 分区方案，并为板载原生 USB
+端口启用硬件 USB CDC 与启动时 CDC。
 
 完整工作流包含轻量策略任务、两个发现任务以及最多 17 个构建/打包任务。矩阵任务不会
 快速失败，因此单个失败不会隐藏其他示例的结果。

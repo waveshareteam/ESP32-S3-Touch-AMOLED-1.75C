@@ -4,6 +4,8 @@
 
 Please do not report security issues through public GitHub issues.
 
-Use Waveshare's official support channel for vulnerability reports and include enough detail to reproduce and assess the issue.
+GitHub private vulnerability reporting is currently not enabled for this repository. Submit a private
+support ticket through [Waveshare's official support service](https://service.waveshare.com/) for
+vulnerability reports, and include enough detail to reproduce and assess the issue.
 
 For non-security bugs, use the regular GitHub issue template.

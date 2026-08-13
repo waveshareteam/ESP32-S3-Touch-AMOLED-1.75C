@@ -7,7 +7,8 @@ published in GitHub Releases comes from this workflow; release firmware is not c
 
 ## Discovery Boundary
 
-- ESP-IDF projects are direct children of `examples/esp-idf/` containing `CMakeLists.txt`.
+- ESP-IDF projects are direct children of `examples/esp-idf/` containing `CMakeLists.txt` and a
+  `main/` directory.
 - Arduino sketches are direct children of `examples/arduino/examples/` containing a top-level `.ino` file.
 - `examples/arduino/libraries/**`, local component samples, and `Firmware/**` are excluded.
 
@@ -16,7 +17,7 @@ path.
 
 ## Validated Matrix
 
-Versions were resolved from upstream releases on 2026-08-10:
+Versions were revalidated against upstream releases on 2026-08-13:
 
 | Framework | Version | Examples | Firmware artifacts |
 | --- | --- | ---: | ---: |
@@ -25,7 +26,9 @@ Versions were resolved from upstream releases on 2026-08-10:
 | Arduino-ESP32 | `3.3.11` | 7 | 7 |
 
 ESP-IDF targets `esp32s3`. Arduino uses
-`esp32:esp32:esp32s3` and the bundled libraries.
+`esp32:esp32:esp32s3:FlashSize=16M,PSRAM=opi,FlashMode=qio,PartitionScheme=app3M_fat9M_16MB,USBMode=hwcdc,CDCOnBoot=cdc`
+with the bundled libraries: 16 MB flash, 8 MB OPI PSRAM, the 16 MB partition
+scheme, and hardware USB CDC enabled at boot for the board's native USB port.
 
 The full workflow consists of a lightweight policy job, two discovery jobs, and up to 17
 build/package jobs. Matrix jobs do not fail fast, so one failure does not hide results from the
