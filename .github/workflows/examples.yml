@@ -141,7 +141,6 @@ jobs:
             --surface arduino \
             --selector "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target || needs.classify-changes.outputs.arduino_selector }}" \
             --arduino-core 3.3.11 \
-            --fqbn esp32:esp32:esp32s3 \
             --github-output "$GITHUB_OUTPUT"
 
   build-arduino:

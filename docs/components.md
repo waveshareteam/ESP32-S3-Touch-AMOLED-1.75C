@@ -23,9 +23,10 @@ or directory placement alone are not sufficient evidence for removal.
 
 ## Hardware Cross-Check Boundary
 
-A read-only comparison against the repository schematic confirmed the maintained display data,
-clock, and chip-select values, the touch I2C/interrupt values, and the audio clock/data values used by
-the Arduino board header. Display reset/TE, QMI8658 interrupt, and USB signal constants are not all
-duplicated in that header, so the schematic and managed BSP remain authoritative for those signals.
-No pin definitions were changed during the CI and documentation update; runtime behavior still needs
-physical-board validation after the build matrix passes.
+A read-only comparison against the repository schematic confirms LCD QSPI data GPIO4–GPIO7,
+SCLK GPIO38, CS GPIO12, reset GPIO1, and the 466×466 resolution in the Arduino board header.
+It also confirms touch I2C SDA GPIO15/SCL GPIO14, interrupt GPIO11, and reset GPIO2; the reset
+definitions have been corrected so LCD reset and touch reset are no longer conflated. Audio values
+remain BCLK GPIO9, LRCK GPIO45, DIN GPIO10, MCLK GPIO16, DOUT GPIO8, and PA GPIO46. QMI8658,
+AXP, and other signals not repeated in the local header remain authoritative in the schematic and
+managed BSP. A successful build does not verify runtime behavior on physical hardware.

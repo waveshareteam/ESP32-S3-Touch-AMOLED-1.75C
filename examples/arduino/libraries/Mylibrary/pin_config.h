@@ -7,7 +7,7 @@
 #define LCD_SDIO2 6
 #define LCD_SDIO3 7
 #define LCD_SCLK  38
-#define LCD_RESET  2
+#define LCD_RESET  1
 #define LCD_CS 12
 #define LCD_WIDTH 466
 #define LCD_HEIGHT 466

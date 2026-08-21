@@ -9,6 +9,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
+WORKFLOW = REPO / ".github/workflows/examples.yml"
 sys.path.insert(0, str(SCRIPTS))
 
 import discover_examples  # noqa: E402
@@ -30,6 +31,10 @@ ARDUINO_NAMES = {
     "06_ES7210",
     "07_ES8311",
 }
+ARDUINO_FQBN = (
+    "esp32:esp32:esp32s3:FlashSize=16M,PSRAM=opi,FlashMode=qio,"
+    "PartitionScheme=app3M_fat9M_16MB,USBMode=hwcdc,CDCOnBoot=cdc"
+)
 
 
 class DiscoverExamplesTests(unittest.TestCase):
@@ -105,9 +110,33 @@ class DiscoverExamplesTests(unittest.TestCase):
         self.assertEqual({item["idf"] for item in idf_matrix}, {"v5.5.5", "v6.0.2"})
         self.assertEqual(len(arduino_matrix), 7)
         self.assertEqual({item["core"] for item in arduino_matrix}, {"3.3.11"})
+        self.assertEqual(discover_examples.ARDUINO_FQBN, ARDUINO_FQBN)
         self.assertEqual({item["fqbn"] for item in arduino_matrix}, {
-            "esp32:esp32:esp32s3"
+            ARDUINO_FQBN
         })
+        self.assertTrue(all(
+            option in discover_examples.ARDUINO_FQBN
+            for option in (
+                "FlashSize=16M",
+                "PSRAM=opi",
+                "PartitionScheme=app3M_fat9M_16MB",
+                "USBMode=hwcdc",
+                "CDCOnBoot=cdc",
+            )
+        ))
+
+    def test_workflow_uses_the_tested_arduino_fqbn_default(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        discover_job = workflow.split("  discover-arduino:\n", 1)[1].split(
+            "  build-arduino:\n", 1
+        )[0]
+        self.assertIn("python3 scripts/discover_examples.py", discover_job)
+        self.assertNotIn(
+            "--fqbn",
+            discover_job,
+            "the workflow must not override the tested Arduino FQBN default",
+        )
+        self.assertIn('--fqbn "${{ matrix.fqbn }}"', workflow)
 
 
 if __name__ == "__main__":
