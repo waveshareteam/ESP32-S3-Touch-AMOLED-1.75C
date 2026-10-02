@@ -39,6 +39,8 @@ class HardwareContractTests(unittest.TestCase):
             "PIN_ES7210_MCLK": 16,
             "PIN_ES8311_DOUT": 8,
             "PA": 46,
+            "PIN_BUTTON_PWR": 3,
+            "PIN_BUTTON_BOOT": 0,
         }
         for macro, expected_value in expected.items():
             self.assertIn(macro, self.definitions, f"{macro} must be defined in {PIN_CONFIG}")
@@ -57,6 +59,16 @@ class HardwareContractTests(unittest.TestCase):
             "LCD_RESET and TP_RST must remain distinct schematic signals",
         )
 
+    def test_button_pin_contract(self) -> None:
+        self.assertEqual(self.definitions.get("PIN_BUTTON_PWR"), 3, "PIN_BUTTON_PWR must be GPIO3")
+        self.assertEqual(self.definitions.get("PIN_BUTTON_BOOT"), 0, "PIN_BUTTON_BOOT must be GPIO0")
+        self.assertNotEqual(
+            self.definitions.get("PIN_BUTTON_PWR"),
+            self.definitions.get("PIN_BUTTON_BOOT"),
+            "PIN_BUTTON_PWR and PIN_BUTTON_BOOT must remain distinct signals",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
+

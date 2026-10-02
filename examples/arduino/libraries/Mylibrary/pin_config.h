@@ -25,3 +25,7 @@
 #define PIN_ES8311_DOUT       8
 
 #define PA                    46
+
+// BUTTONS
+#define PIN_BUTTON_PWR        3
+#define PIN_BUTTON_BOOT       0

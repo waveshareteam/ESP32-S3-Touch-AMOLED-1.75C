@@ -138,6 +138,21 @@ void setup() {
 
   setFlag();
 
+  // Prune unused floating power rails to minimize battery quiescent current.
+  // Schematic confirms only DCDC1 (3.3V logic) and ALDO1 (3.3V audio codecs) are connected.
+  power.disableDC2();
+  power.disableDC3();
+  power.disableDC4();
+  power.disableDC5();
+  power.disableALDO2();
+  power.disableALDO3();
+  power.disableALDO4();
+  power.disableBLDO1();
+  power.disableBLDO2();
+  power.disableCPUSLDO();
+  power.disableDLDO1();
+  power.disableDLDO2();
+
   power.disableIRQ(XPOWERS_AXP2101_ALL_IRQ);
   power.setChargeTargetVoltage(3);
   // Clear all interrupt flags
@@ -202,12 +217,32 @@ void setup() {
   lv_obj_align(info_label, LV_ALIGN_CENTER, 0, 0);
 
   Serial.println("Setup done");
-  pinMode(0, INPUT);
+  // Hardware button configuration:
+  // Top PWR button is inverted via BSS138 N-MOSFET to GPIO 3 (active-HIGH).
+  // Bottom BOOT button is on GPIO 0 (active-LOW).
+  // Note: The AXP2101 PMIC IRQ line is not wired to the ESP32 on this board.
+  pinMode(PIN_BUTTON_PWR, INPUT);
+  pinMode(PIN_BUTTON_BOOT, INPUT_PULLUP);
 }
 
 void loop() {
   lv_timer_handler(); /* let the GUI do its work */
   delay(5);
+
+  // Poll top physical PWR button directly (active-HIGH due to inverter FET)
+  static bool last_pwr_state = false;
+  bool pwr_pressed = (digitalRead(PIN_BUTTON_PWR) == HIGH);
+  if (pwr_pressed && !last_pwr_state) {
+    if (adc_switch) {
+      adcOn();
+      Serial.println("Enable ADC\n\n\n");
+    } else {
+      adcOff();
+      Serial.println("Disable ADC\n\n\n");
+    }
+    adc_switch = !adc_switch;
+  }
+  last_pwr_state = pwr_pressed;
 
   if (pmu_flag) {
     pmu_flag = false;
