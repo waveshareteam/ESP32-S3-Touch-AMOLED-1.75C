@@ -40,7 +40,7 @@ development platform.
 | Motion sensor | QMI8658 six-axis IMU |
 | Audio | Dual digital microphones via ES7210 ADC; ES8311 audio codec |
 | Board support | Managed component: `waveshare/esp32_s3_touch_amoled_1_75c` (`^3.0.0`) |
-| Hardware files | [Schematic](Schematic/) |
+| Hardware files | [Schematic](hardware/) |
 
 ## 📦 Firmware Releases
 
@@ -115,7 +115,7 @@ packaged as a flashable combined firmware artifact. See
 | [`examples/arduino/libraries/`](examples/arduino/libraries/) | Bundled Arduino libraries |
 | [`Firmware/`](Firmware/) | Factory flashing and recovery binaries |
 | [`releases/`](releases/) | Packaging, artifact download, and release tools |
-| [`Schematic/`](Schematic/) | Public schematic files |
+| [`hardware/`](hardware/) | Public schematic files |
 | [`config/`](config/) | Shared ESP-IDF configuration overlays |
 | [`docs/`](docs/) | Repository, CI, component, and firmware notes |
 

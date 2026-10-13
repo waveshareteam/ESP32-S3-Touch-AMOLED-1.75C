@@ -38,7 +38,7 @@
 | 运动传感器 | QMI8658 六轴 IMU |
 | 音频 | ES7210 ADC 双数字麦克风；ES8311 音频编解码器 |
 | 板级支持 | 托管组件 `waveshare/esp32_s3_touch_amoled_1_75c`（`^3.0.0`） |
-| 硬件文件 | [原理图](Schematic/) |
+| 硬件文件 | [原理图](hardware/) |
 
 ## 📦 固件版本
 
@@ -108,7 +108,7 @@ Arduino 随仓库提供的库位于 [`examples/arduino/libraries`](examples/ardu
 | [`examples/arduino/libraries/`](examples/arduino/libraries/) | 随仓库提供的 Arduino 库 |
 | [`Firmware/`](Firmware/) | 工厂烧录和恢复二进制 |
 | [`releases/`](releases/) | 打包、产物下载和发布工具 |
-| [`Schematic/`](Schematic/) | 公开原理图文件 |
+| [`hardware/`](hardware/) | 公开原理图文件 |
 | [`config/`](config/) | 共用 ESP-IDF 配置覆盖项 |
 | [`docs/`](docs/) | 仓库、CI、组件和固件说明 |
 
