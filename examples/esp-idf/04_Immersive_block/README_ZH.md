@@ -24,8 +24,8 @@ idf.py set-target esp32s3
 idf.py build
 ```
 
-仓库 CI 会在两个受支持的 ESP-IDF 版本系列上构建本示例。完整矩阵见仓库的
-[CI 文档](../../../docs/ci_ZH.md)。
+仓库 CI 会在两个受支持的 ESP-IDF 版本系列上构建本示例。受支持的版本见
+[仓库 README](../../../README_ZH.md)。
 
 ## 运行说明
 

@@ -25,7 +25,7 @@ idf.py build
 ```
 
 Repository CI builds this example on both supported ESP-IDF release lines. See
-the repository [CI documentation](../../../docs/ci.md) for the complete matrix.
+the [repository README](../../../README.md) for the supported versions.
 
 ## Runtime Notes
 
