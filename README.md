@@ -47,7 +47,7 @@ The fastest way to try an example is a ready-to-flash package from the
 4. Run `flash_combined.bat COMx` on Windows or `./flash_combined.sh /dev/ttyACM0` on Linux.
 5. Reset the board if it does not restart automatically.
 
-Factory firmware (restores the out-of-box demo): [download](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/releases/download/v1.0.1/ESP32-S3-Touch-AMOLED-1.75C-FactoryOnly-260114.bin).
+Factory firmware (restores the out-of-box demo): download the `FactoryOnly` file from the [Releases page](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/releases).
 
 ## 🧪 Examples
 

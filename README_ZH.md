@@ -45,7 +45,7 @@ ESP32-S3-Touch-AMOLED-1.75C 是一块手表形态的开发板，在 ESP32-S3 上
 4. Windows 运行 `flash_combined.bat COMx`，Linux 运行 `./flash_combined.sh /dev/ttyACM0`。
 5. 如果开发板未自动重启，请手动复位。
 
-出厂固件（恢复开箱演示）：[下载](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/releases/download/v1.0.1/ESP32-S3-Touch-AMOLED-1.75C-FactoryOnly-260114.bin)。
+出厂固件（恢复开箱演示）：在 [Releases 页面](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/releases)下载文件名带 `FactoryOnly` 的文件。
 
 ## 🧪 示例
 
