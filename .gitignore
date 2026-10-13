@@ -13,3 +13,14 @@ release-artifacts/
 release-dist/
 release-downloads/
 **/__pycache__/
+
+# Local AI coding agent state
+.claude/
+.cursor/
+.codex/
+.gemini/
+.windsurf/
+.continue/
+.roo/
+.cline/
+.aider*
