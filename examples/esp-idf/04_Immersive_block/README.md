@@ -2,40 +2,25 @@
 
 [English](README.md) | [简体中文](README_ZH.md)
 
-This ESP-IDF example renders movable LVGL shapes on the AMOLED display and uses
-QMI8658 acceleration data to move them as the board tilts.
+## What It Does
 
-## Requirements
+Renders movable LVGL shapes on the AMOLED display and uses QMI8658 acceleration data to move them as the board tilts.
 
-- ESP32-S3-Touch-AMOLED-1.75C
-- ESP-IDF `v5.5.5` or `v6.0.2`
-- USB connection for flashing and monitoring
+## Hardware Required
 
-The project uses the managed Waveshare BSP, the managed QMI8658 component, and
-LVGL 9.5.0 as declared in [`main/idf_component.yml`](main/idf_component.yml).
+- ESP32-S3-Touch-AMOLED-1.75C development board
 
-## Build Entry Point
+## How to Run
 
-The maintained application source is [`main/main.c`](main/main.c). From an
-ESP-IDF environment, configure the target and build this project with:
-
-```text
-idf.py set-target esp32s3
-idf.py build
+```bash
+idf.py set-target esp32s3 build flash monitor
 ```
 
-Repository CI builds this example on both supported ESP-IDF release lines. See
-the repository [CI documentation](../../../docs/ci.md) for the complete matrix.
+## Expected Result
 
-## Runtime Notes
-
-- Keep the board stationary while the initial accelerometer calibration runs.
-- Tap the on-screen control to request recalibration when needed.
-- CI validates compilation and packaging; display, touch, and motion behavior
-  still require validation on the physical board.
+After a short level calibration, shapes appear on the display and slide toward the lower side when the board is tilted.
 
 ## Troubleshooting
 
-If flashing or monitoring fails, verify the USB connection, select the correct
-serial port, and retry with the complete firmware package produced by the same
-CI build.
+- Keep the board stationary on a level surface while the initial calibration runs. Press the BOOT button to recalibrate.
+- If flashing or monitoring fails, verify the USB connection and select the correct serial port.

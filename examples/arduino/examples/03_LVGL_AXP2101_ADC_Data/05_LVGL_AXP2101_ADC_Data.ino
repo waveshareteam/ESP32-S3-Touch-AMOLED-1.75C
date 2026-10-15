@@ -8,12 +8,13 @@
 
 #include <WiFi.h>  // 引入WiFi库
 
-// Station模式的WiFi信息
-const char *ssid_sta = "luckfox";
-const char *password_sta = "12345678";
+// Station模式的WiFi信息，填入你自己的网络；SSID留空则跳过Station模式
+const char *ssid_sta = "";
+const char *password_sta = "";
+#define WIFI_STA_TIMEOUT_MS 10000  // Station模式连接超时，超时后继续运行
 
 // AP模式的WiFi信息
-const char *ssid_ap = "ESP32-S3-Touch-AMOLED-1.8-AP";  // AP热点名称
+const char *ssid_ap = "ESP32-S3-Touch-AMOLED-1.75C-AP";  // AP热点名称
 const char *password_ap = "12345678";                  // AP热点密码（至少8位）
 
 XPowersPMU power;
@@ -108,16 +109,26 @@ void setup() {
 
   delay(1000);
 
-  // 启用Station模式
-  Serial.println("正在以Station模式连接WiFi...");
-  WiFi.begin(ssid_sta, password_sta);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  // 启用Station模式（已配置SSID时），连接超时后继续运行
+  if (strlen(ssid_sta) > 0) {
+    Serial.println("正在以Station模式连接WiFi...");
+    WiFi.begin(ssid_sta, password_sta);
+    unsigned long start_ms = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start_ms < WIFI_STA_TIMEOUT_MS) {
+      delay(500);
+      Serial.print(".");
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("\nStation模式连接成功！");
+      Serial.print("Station模式IP地址: ");
+      Serial.println(WiFi.localIP());
+    } else {
+      Serial.println("\nStation模式连接超时，跳过");
+      WiFi.disconnect(true);  // 停止重连，避免影响AP
+    }
+  } else {
+    Serial.println("未配置Station模式WiFi，跳过");
   }
-  Serial.println("\nStation模式连接成功！");
-  Serial.print("Station模式IP地址: ");
-  Serial.println(WiFi.localIP());
 
   // 启用AP模式
   Serial.println("正在启动AP模式...");
@@ -125,8 +136,6 @@ void setup() {
   IPAddress apIP = WiFi.softAPIP();
   Serial.print("AP模式IP地址: ");
   Serial.println(apIP);
-
-  Serial.println("AP和Station模式已同时启用！");
   Wire.begin(IIC_SDA, IIC_SCL);
 
   bool result = power.begin(Wire, AXP2101_SLAVE_ADDRESS, IIC_SDA, IIC_SCL);

@@ -1,8 +1,5 @@
 **/.git/
 
-**/.gitmodules
-**/.gitattributes
-**/.gitkeep
 **/.vscode
 **/.gitindex
 **/.gitlog
@@ -13,6 +10,17 @@
 **/dependencies.lock
 **/sdkconfig
 release-artifacts/
-releases/dist/
-releases/downloads/
+release-dist/
+release-downloads/
 **/__pycache__/
+
+# Local AI coding agent state
+.claude/
+.cursor/
+.codex/
+.gemini/
+.windsurf/
+.continue/
+.roo/
+.cline/
+.aider*

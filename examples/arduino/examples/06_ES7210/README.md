@@ -1,0 +1,27 @@
+# 06_ES7210
+
+[English](README.md) | [简体中文](README_ZH.md)
+
+## What It Does
+
+Reads the microphones through the ES7210 and runs voice activity detection.
+
+## Hardware Required
+
+- ESP32-S3-Touch-AMOLED-1.75C development board
+
+## How to Run
+
+1. Install the `esp32` board package and make [`examples/arduino/libraries/`](../../libraries/)
+   available as your sketchbook `libraries` folder.
+2. Select **ESP32S3 Dev Module** and set Flash Size **16MB**, Partition Scheme
+   **16M Flash (3MB APP/9.9MB FATFS)**, PSRAM **OPI PSRAM**, USB CDC On Boot **Enabled**.
+3. Open `08_ES7210.ino` and upload.
+
+## Expected Result
+
+The serial monitor (115200 baud) prints `Speech detected` while someone is speaking near the board. The display stays off.
+
+## Troubleshooting
+
+None yet.
