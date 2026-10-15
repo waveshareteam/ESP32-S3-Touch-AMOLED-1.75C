@@ -8,6 +8,5 @@
   "arduino": {
     "core": "3.3.11",
     "fqbn": "esp32:esp32:esp32s3:FlashSize=16M,PSRAM=opi,FlashMode=qio,PartitionScheme=app3M_fat9M_16MB,USBMode=hwcdc,CDCOnBoot=cdc"
-  },
-  "factory_firmware": "https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/releases"
+  }
 }
