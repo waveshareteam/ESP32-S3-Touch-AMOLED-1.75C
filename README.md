@@ -14,7 +14,7 @@
     <a href="examples/arduino/examples/">🔧 Arduino</a> &middot;
     <a href="hardware/">📚 Documentation</a>
   </p>
-  <p><img src="docs/images/esp32-s3-touch-amoled-1.75c.jpg" alt="ESP32-S3-Touch-AMOLED-1.75C development board"></p>
+  <p><img src="docs/images/esp32-s3-touch-amoled-1.75c.jpg" alt="ESP32-S3-Touch-AMOLED-1.75C development board" width="500"></p>
 </div>
 
 ---
