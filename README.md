@@ -29,6 +29,7 @@ firmware, and the schematic.
 | Feature | Device / interface |
 | --- | --- |
 | MCU | ESP32-S3 |
+| Memory | 32 MB Flash, 8 MB PSRAM |
 | Display | 1.75-inch 466 x 466 QSPI AMOLED using CO5300 |
 | Touch | CST9217 capacitive touch controller over I2C |
 | Power management | AXP2101 |
