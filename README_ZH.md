@@ -28,7 +28,7 @@ ESP32-S3-Touch-AMOLED-1.75C 是一块手表形态的开发板，在 ESP32-S3 上
 | 功能 | 器件或接口 |
 | --- | --- |
 | MCU | ESP32-S3 |
-| 存储 | 32 MB Flash，8 MB PSRAM |
+| 存储器 | 32 MB Flash，8 MB PSRAM |
 | 显示 | 1.75 英寸 466 × 466 QSPI AMOLED，CO5300 控制器 |
 | 触摸 | CST9217 电容触摸控制器，I2C 接口 |
 | 电源管理 | AXP2101 |
