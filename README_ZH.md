@@ -84,7 +84,7 @@ ESP32-S3-Touch-AMOLED-1.75C 是一块手表形态的开发板，在 ESP32-S3 上
 
 ## 📚 资料
 
-- [原理图](hardware/)
+- [原理图](hardware/schematic/)
 - [产品页](https://www.waveshare.com/esp32-s3-touch-amoled-1.75c.htm)
 - [Wiki](https://docs.waveshare.net/ESP32-S3-Touch-AMOLED-1.75C/)
 
