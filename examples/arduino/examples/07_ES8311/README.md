@@ -15,8 +15,8 @@ Plays a built-in audio clip through the ES8311, then loops the microphone back t
 
 1. Install the `esp32` board package and make [`examples/arduino/libraries/`](../../libraries/)
    available as your sketchbook `libraries` folder.
-2. Select **ESP32S3 Dev Module** and set Flash Size **16MB**, Partition Scheme
-   **16M Flash (3MB APP/9.9MB FATFS)**, PSRAM **OPI PSRAM**, USB CDC On Boot **Enabled**.
+2. Select **ESP32S3 Dev Module** and set Flash Size **32MB**, Partition Scheme
+   **32M Flash (4.8MB APP/22MB FATFS)**, PSRAM **OPI PSRAM**, USB CDC On Boot **Enabled**.
 3. Open `15_ES8311.ino` and upload.
 
 ## Expected Result
