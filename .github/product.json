@@ -7,6 +7,6 @@
   "esp_idf": { "versions": ["v5.5.5", "v6.0.2"] },
   "arduino": {
     "core": "3.3.11",
-    "fqbn": "esp32:esp32:esp32s3:FlashSize=16M,PSRAM=opi,FlashMode=qio,PartitionScheme=app3M_fat9M_16MB,USBMode=hwcdc,CDCOnBoot=cdc"
+    "fqbn": "esp32:esp32:esp32s3:FlashSize=32M,PSRAM=opi,FlashMode=qio,PartitionScheme=app5M_fat24M_32MB,USBMode=hwcdc,CDCOnBoot=cdc"
   }
 }
