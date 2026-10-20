@@ -1,18 +1,14 @@
-**/.git/
-
 **/.vscode
-**/.gitindex
-**/.gitlog
-**/.git-*
 **/.idea
 **/build
 **/managed_components
 **/dependencies.lock
 **/sdkconfig
-release-artifacts/
-release-dist/
-release-downloads/
+**/sdkconfig.old
 **/__pycache__/
+release-artifacts/
+release-downloads/
+release-dist/
 
 # Local AI coding agent state
 .claude/
