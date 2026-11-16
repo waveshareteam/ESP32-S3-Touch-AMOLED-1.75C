@@ -8,11 +8,11 @@
     <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C"></a>
   </p>
   <p>
-    <a href="https://www.waveshare.com/esp32-s3-touch-amoled-1.75c.htm">🌐 Product</a> &middot;
+    <a href="https://www.waveshare.com/esp32-s3-touch-amoled-1.75c.htm">🛒 Product</a> &middot;
     <a href="https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/releases/latest">📦 Firmware</a> &middot;
     <a href="examples/esp-idf/">🧩 ESP-IDF</a> &middot;
     <a href="examples/arduino/examples/">🔧 Arduino</a> &middot;
-    <a href="hardware/">📚 Documentation</a>
+    <a href="https://docs.waveshare.com/ESP32-S3-Touch-AMOLED-1.75C">📖 Documentation</a>
   </p>
   <p><img src="docs/images/esp32-s3-touch-amoled-1.75c.jpg" alt="ESP32-S3-Touch-AMOLED-1.75C development board" width="500"></p>
 </div>
