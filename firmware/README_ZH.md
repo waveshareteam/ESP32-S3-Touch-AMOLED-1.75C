@@ -15,3 +15,5 @@ python -m pip install esptool
 esptool.py --chip esp32s3 --port <PORT> erase_flash
 esptool.py --chip esp32s3 --port <PORT> write_flash 0x0 ESP32-S3-Touch-AMOLED-1.75C_FactoryOnly_20260114.bin
 ```
+
+[`brookesia/`](brookesia/) 目录存放带息屏功能的 Brookesia 固件源码。它不是可直接烧录的镜像，请按 [`brookesia/README_ZH.md`](brookesia/README_ZH.md) 中的步骤编译。

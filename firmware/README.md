@@ -15,3 +15,5 @@ python -m pip install esptool
 esptool.py --chip esp32s3 --port <PORT> erase_flash
 esptool.py --chip esp32s3 --port <PORT> write_flash 0x0 ESP32-S3-Touch-AMOLED-1.75C_FactoryOnly_20260114.bin
 ```
+
+The [`brookesia/`](brookesia/) folder holds the source of a Brookesia firmware with a screen timeout. It is not a ready-to-flash image. Build it with the steps in [`brookesia/README.md`](brookesia/README.md).
