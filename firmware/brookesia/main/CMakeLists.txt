@@ -16,7 +16,6 @@ idf_component_register(
         Settings
         SpecAnalyzer
         XiaozhiApp
-        chat_history
         storage_service
         system_status
 )

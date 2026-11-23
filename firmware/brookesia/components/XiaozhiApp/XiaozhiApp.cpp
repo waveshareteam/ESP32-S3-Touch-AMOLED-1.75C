@@ -5,7 +5,6 @@
  */
 
 #include "XiaozhiApp.hpp"
-#include "chat_history.h"
 #include "XiaozhiActivationClient.hpp"
 #include "XiaozhiActivationPrompt.hpp"
 #include "XiaozhiAudioProcessor.hpp"
@@ -1143,17 +1142,6 @@ void XiaozhiApp::handleControlEvent(const ControlEvent &event)
             setChatMessage(
                 static_cast<XiaozhiClient::TextRole>(event.role), event.text
             );
-            const char *history_role =
-                static_cast<XiaozhiClient::TextRole>(event.role) ==
-                    XiaozhiClient::TextRole::Assistant ? "assistant" : "user";
-            const esp_err_t history_ret = chat_history_append(history_role, event.text);
-            if (history_ret != ESP_OK && history_ret != ESP_ERR_INVALID_STATE &&
-                    history_ret != ESP_ERR_TIMEOUT) {
-                ESP_UTILS_LOGW(
-                    "Queue SD chat history failed: %s",
-                    esp_err_to_name(history_ret)
-                );
-            }
         }
         break;
     case ControlEventType::Emotion:

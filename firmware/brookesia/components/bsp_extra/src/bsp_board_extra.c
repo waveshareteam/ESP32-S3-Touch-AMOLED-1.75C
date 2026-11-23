@@ -65,10 +65,6 @@ const char *bsp_extra_audio_owner_name(bsp_extra_audio_owner_t owner)
         return "None";
     case BSP_EXTRA_AUDIO_OWNER_MUSIC:
         return "MusicPlayer";
-    case BSP_EXTRA_AUDIO_OWNER_VIDEO:
-        return "VideoPlayer";
-    case BSP_EXTRA_AUDIO_OWNER_RECORDER:
-        return "Recorder";
     case BSP_EXTRA_AUDIO_OWNER_SPEC_ANALYZER:
         return "SpecAnalyzer";
     case BSP_EXTRA_AUDIO_OWNER_XIAOZHI:

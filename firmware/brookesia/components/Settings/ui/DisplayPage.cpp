@@ -1,6 +1,5 @@
 #include "DisplayPage.hpp"
 #include "SettingsUI.hpp"
-#include "display_power.hpp"
 #include "esp_log.h"
 #include "../Settings.hpp"
 
@@ -107,11 +106,8 @@ namespace esp_brookesia::apps
     {
         const uint32_t selected = display_power::timeout_s();
         for (size_t i = 0; i < timeout_checks.size(); ++i) {
-            if (display_power::TIMEOUT_OPTIONS[i].seconds == selected) {
-                lv_obj_remove_flag(timeout_checks[i], LV_OBJ_FLAG_HIDDEN);
-            } else {
-                lv_obj_add_flag(timeout_checks[i], LV_OBJ_FLAG_HIDDEN);
-            }
+            lv_obj_set_flag(timeout_checks[i], LV_OBJ_FLAG_HIDDEN,
+                            display_power::TIMEOUT_OPTIONS[i].seconds != selected);
         }
     }
 

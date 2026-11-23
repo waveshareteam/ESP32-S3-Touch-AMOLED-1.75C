@@ -1,5 +1,6 @@
 #include "display_power.hpp"
 
+#include <algorithm>
 #include <cinttypes>
 
 #include "bsp/esp-bsp.h"
@@ -27,6 +28,23 @@ constexpr uint32_t PWR_PRESS_MIN_MS = 50;
 // A 4 s hold powers the board off in the AXP2101, so only short presses toggle.
 constexpr uint32_t PWR_PRESS_MAX_MS = 1500;
 
+enum class ScreenState { Awake, Dimmed, Off };
+
+constexpr ScreenState target_state(uint32_t idle_ms, uint32_t timeout_ms)
+{
+    if (timeout_ms == 0) {
+        return ScreenState::Awake;
+    }
+    const uint32_t dim_lead_ms = std::min<uint32_t>(10000, timeout_ms / 3);
+    if (idle_ms >= timeout_ms) {
+        return ScreenState::Off;
+    }
+    if (idle_ms >= timeout_ms - dim_lead_ms) {
+        return ScreenState::Dimmed;
+    }
+    return ScreenState::Awake;
+}
+
 constexpr bool is_timeout_option(uint32_t seconds)
 {
     return std::any_of(TIMEOUT_OPTIONS.begin(), TIMEOUT_OPTIONS.end(),
@@ -52,10 +70,12 @@ static_assert(target_state(15000, 15000) == ScreenState::Off);
 
 struct Runtime {
     lv_display_t *display = nullptr;
+    lv_indev_read_cb_t touch_read = nullptr;
     ScreenState state = ScreenState::Awake;
     int brightness = DEFAULT_BRIGHTNESS;
     uint32_t timeout_s = DEFAULT_TIMEOUT_S;
-    lv_obj_t *shield = nullptr;
+    bool touch_down = false;
+    bool swallow_touch = false;
     bool pwr_down = false;
     uint32_t pwr_down_since = 0;
 };
@@ -96,46 +116,6 @@ void apply_brightness()
     }
 }
 
-void transition(ScreenState next);
-
-void shield_event_cb(lv_event_t *e)
-{
-    switch (lv_event_get_code(e)) {
-    case LV_EVENT_PRESSED:
-        transition(ScreenState::Awake);
-        break;
-    case LV_EVENT_RELEASED:
-    case LV_EVENT_PRESS_LOST:
-        // The PWR key can turn the screen off again while this touch is held.
-        if (s.state == ScreenState::Awake) {
-            lv_obj_delete_async(s.shield);
-            s.shield = nullptr;
-        }
-        break;
-    default:
-        break;
-    }
-}
-
-// Swallows the wake touch so it never reaches the app under it. LVGL hit-tests
-// the system layer first, and Brookesia keeps its status and navigation bars there.
-void ensure_shield()
-{
-    if (s.shield != nullptr) {
-        return;
-    }
-    s.shield = lv_obj_create(lv_display_get_layer_sys(s.display));
-    lv_obj_remove_style_all(s.shield);
-    lv_obj_set_size(s.shield, lv_pct(100), lv_pct(100));
-    lv_obj_align(s.shield, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_move_foreground(s.shield);
-    lv_obj_add_flag(s.shield, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_remove_flag(s.shield, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_event_cb(s.shield, shield_event_cb, LV_EVENT_PRESSED, nullptr);
-    lv_obj_add_event_cb(s.shield, shield_event_cb, LV_EVENT_RELEASED, nullptr);
-    lv_obj_add_event_cb(s.shield, shield_event_cb, LV_EVENT_PRESS_LOST, nullptr);
-}
-
 void transition(ScreenState next)
 {
     if (next == s.state) {
@@ -143,12 +123,36 @@ void transition(ScreenState next)
     }
     ESP_LOGI(TAG, "Screen %s -> %s (idle %" PRIu32 " ms, timeout %" PRIu32 " s)",
              state_name(s.state), state_name(next), lv_display_get_inactive_time(s.display), s.timeout_s);
+    const bool was_off = s.state == ScreenState::Off;
     s.state = next;
     apply_brightness();
+    // A dark panel needs no frames, so LVGL stops rendering and flushing them.
+    lv_display_enable_invalidation(s.display, next != ScreenState::Off);
+    if (was_off) {
+        lv_obj_invalidate(lv_display_get_screen_active(s.display));
+    }
     if (next == ScreenState::Awake) {
         lv_display_trigger_activity(s.display);
-    } else {
-        ensure_shield();
+    }
+}
+
+// Brookesia gestures poll the touch device directly instead of hit-testing
+// objects, so the wake touch is hidden here, before LVGL or gestures see it.
+void touch_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
+{
+    s.touch_read(indev, data);
+    const bool down = data->state == LV_INDEV_STATE_PRESSED;
+    if (down && !s.touch_down && s.state != ScreenState::Awake) {
+        s.swallow_touch = true;
+        transition(ScreenState::Awake);
+    }
+    s.touch_down = down;
+    if (!down) {
+        s.swallow_touch = false;
+    }
+    if (s.swallow_touch) {
+        data->state = LV_INDEV_STATE_RELEASED;
+        lv_display_trigger_activity(s.display);
     }
 }
 
@@ -158,19 +162,6 @@ void idle_timer_cb(lv_timer_t *timer)
     const ScreenState target = target_state(lv_display_get_inactive_time(s.display), s.timeout_s * 1000);
     if (target > s.state) {
         transition(target);
-    }
-}
-
-void toggle_screen()
-{
-    if (s.state == ScreenState::Awake) {
-        transition(ScreenState::Off);
-        return;
-    }
-    transition(ScreenState::Awake);
-    if (s.shield != nullptr) {
-        lv_obj_delete(s.shield);
-        s.shield = nullptr;
     }
 }
 
@@ -188,7 +179,7 @@ void pwr_timer_cb(lv_timer_t *timer)
     }
     const uint32_t held_ms = lv_tick_elaps(s.pwr_down_since);
     if (held_ms >= PWR_PRESS_MIN_MS && held_ms <= PWR_PRESS_MAX_MS) {
-        toggle_screen();
+        transition(s.state == ScreenState::Awake ? ScreenState::Off : ScreenState::Awake);
     }
 }
 
@@ -205,15 +196,21 @@ esp_err_t start_pwr_key()
     if (result != ESP_OK) {
         return result;
     }
-    const int idle_level = gpio_get_level(PWR_KEY_GPIO);
-    ESP_LOGI(TAG, "PWR key GPIO3 idle level: %d", idle_level);
-    // The active-high polarity is unverified. A key that already reads pressed
-    // would turn every gap between real presses into a toggle, so stay off.
-    if (idle_level == PWR_KEY_PRESSED_LEVEL) {
-        ESP_LOGW(TAG, "PWR key reads pressed at start, PWR screen toggle disabled");
-        return ESP_ERR_INVALID_STATE;
-    }
+    const int level = gpio_get_level(PWR_KEY_GPIO);
+    ESP_LOGI(TAG, "PWR key GPIO%d level at start: %d", PWR_KEY_GPIO, level);
+    // A press still held from power-on has no start time, so its release never toggles.
+    s.pwr_down = level == PWR_KEY_PRESSED_LEVEL;
     return lv_timer_create(pwr_timer_cb, PWR_POLL_MS, nullptr) != nullptr ? ESP_OK : ESP_ERR_NO_MEM;
+}
+
+lv_indev_t *find_touch(lv_display_t *display)
+{
+    for (lv_indev_t *indev = lv_indev_get_next(nullptr); indev != nullptr; indev = lv_indev_get_next(indev)) {
+        if (lv_indev_get_type(indev) == LV_INDEV_TYPE_POINTER && lv_indev_get_display(indev) == display) {
+            return indev;
+        }
+    }
+    return nullptr;
 }
 
 void load_settings()
@@ -264,11 +261,17 @@ esp_err_t start(lv_display_t *display)
     if (s.display != nullptr) {
         return ESP_ERR_INVALID_STATE;
     }
+    lv_indev_t *touch = find_touch(display);
+    if (touch == nullptr) {
+        return ESP_ERR_NOT_FOUND;
+    }
     s.display = display;
     load_settings();
     ESP_LOGI(TAG, "Loaded brightness %d%%, timeout %" PRIu32 " s", s.brightness, s.timeout_s);
     apply_brightness();
 
+    s.touch_read = lv_indev_get_read_cb(touch);
+    lv_indev_set_read_cb(touch, touch_read_cb);
     if (lv_timer_create(idle_timer_cb, IDLE_POLL_MS, nullptr) == nullptr) {
         return ESP_ERR_NO_MEM;
     }

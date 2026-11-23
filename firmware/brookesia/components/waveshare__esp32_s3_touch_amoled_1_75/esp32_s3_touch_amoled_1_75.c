@@ -31,7 +31,7 @@ sdmmc_card_t *bsp_sdcard = NULL; // Global uSD card handler
 static esp_lcd_touch_handle_t tp = NULL;
 static esp_lcd_panel_handle_t panel_handle = NULL; // LCD panel handle
 static esp_lcd_panel_io_handle_t io_handle = NULL;
-static int brightness_percent_last;
+uint8_t brightness;
 
 typedef enum {
     BSP_AUDIO_MODE_NONE,
@@ -556,13 +556,13 @@ esp_err_t bsp_display_brightness_set(int brightness_percent)
         return ESP_ERR_INVALID_ARG;
     }
 
-    brightness_percent_last = brightness_percent;
+    brightness = (uint8_t)(brightness_percent * 255 / 100);
 
     uint32_t lcd_cmd = 0x51;
     lcd_cmd &= 0xff;
     lcd_cmd <<= 8;
     lcd_cmd |= 0x02 << 24;
-    uint8_t param = (uint8_t)(brightness_percent * 255 / 100);
+    uint8_t param = brightness;
     esp_lcd_panel_io_tx_param(io_handle, lcd_cmd, &param, 1);
 
     return ESP_OK;
@@ -576,7 +576,7 @@ int bsp_display_brightness_get(void)
         return -1;
     }
 
-    return brightness_percent_last;
+    return brightness * 100 / 255;
 }
 
 esp_err_t bsp_display_backlight_off(void)

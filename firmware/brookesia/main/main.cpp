@@ -25,7 +25,6 @@
 #include "SpecAnalyzer.hpp"
 #include "XiaozhiApp.hpp"
 #include "bsp_board_extra.h"
-#include "chat_history.h"
 #include "display_perf_monitor.hpp"
 #include "display_power.hpp"
 #include "esp_brookesia_app_calculator.hpp"
@@ -578,12 +577,6 @@ extern "C" void app_main(void)
     ESP_UTILS_CHECK_ERROR_EXIT(init_nvs(), "Initialize NVS failed");
 
     ESP_UTILS_CHECK_ERROR_EXIT(storage_service_init(), "Initialize storage service failed");
-    const esp_err_t chat_history_result = chat_history_init();
-    if (chat_history_result != ESP_OK) {
-        ESP_UTILS_LOGW(
-            "AIChats SD history unavailable: %s", esp_err_to_name(chat_history_result)
-        );
-    }
 
     refresh_boot_loading(boot_loading, "Mounting internal storage...", 34);
     const esp_err_t storage_result = bsp_spiffs_mount();

@@ -542,7 +542,7 @@ void ButtonTest::stopWorker()
     if (_worker_task.load() != nullptr) {
         // The worker never touches LVGL and owns its self-delete path. Leaving
         // it to finish avoids racing vTaskDelete() against natural task exit.
-        ESP_UTILS_LOGW("Button Test worker is still leaving a bounded I2C call");
+        ESP_UTILS_LOGW("Button Test worker did not stop within 2.5 s");
     }
 }
 

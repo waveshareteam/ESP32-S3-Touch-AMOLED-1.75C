@@ -357,7 +357,7 @@ bool MusicPlayer::pause(void)
         lv_demo_music_exit_pause();
     }
     /* Preserve the UI, iterator, and SD lease, but fully hand off the shared
-     * codec so Video/Recorder/SpecAnalyzer/Xiaozhi may acquire it. */
+     * codec so SpecAnalyzer or Xiaozhi may acquire it. */
     return stopAudioSession(true);
 }
 
