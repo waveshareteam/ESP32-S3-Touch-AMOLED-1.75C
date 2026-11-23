@@ -1,0 +1,21 @@
+menu "Brookesia firmware diagnostics"
+
+    config BROOKESIA_DISPLAY_PERF_LOG
+        bool "Log LVGL render and LCD flush performance"
+        depends on ESP_LVGL_ADAPTER_ENABLE_FPS_STATS
+        default n
+        help
+            Emit one compact performance line at a fixed interval. The monitor
+            reuses the LVGL adapter's completed-frame counter and LVGL display
+            events, so it does not create another FreeRTOS task. Reported data
+            includes FPS, redraw/flush rates, rendered pixels, CPU-side flush
+            submission time, LCD transfer wait time, LVGL stack headroom, and
+            internal-memory headroom.
+
+    config BROOKESIA_DISPLAY_PERF_LOG_PERIOD_MS
+        int "Display performance log period (ms)"
+        depends on BROOKESIA_DISPLAY_PERF_LOG
+        range 1000 60000
+        default 2000
+
+endmenu

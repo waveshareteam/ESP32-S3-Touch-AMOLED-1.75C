@@ -1,0 +1,4 @@
+version: 0.6.0
+dependencies:
+  espressif/esp-dsp:
+    version: "1.8.0"

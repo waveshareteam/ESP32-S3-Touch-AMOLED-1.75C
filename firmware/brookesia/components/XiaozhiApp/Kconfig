@@ -1,0 +1,36 @@
+menu "Xiaozhi Application"
+
+    choice XIAOZHI_APP_UI_LANGUAGE
+        prompt "Local UI language"
+        default XIAOZHI_APP_UI_LANGUAGE_ENGLISH
+        help
+            Select the compile-time language used for local Xiaozhi status
+            text and fallback activation instructions. Conversation text and
+            activation messages received from the server are shown unchanged.
+
+        config XIAOZHI_APP_UI_LANGUAGE_ENGLISH
+            bool "English"
+
+        config XIAOZHI_APP_UI_LANGUAGE_SIMPLIFIED_CHINESE
+            bool "Simplified Chinese"
+    endchoice
+
+    choice XIAOZHI_APP_TRANSPORT
+        prompt "Preferred Xiaozhi transport"
+        default XIAOZHI_APP_TRANSPORT_WEBSOCKET
+        help
+            WebSocket matches the previously validated factory-firmware path.
+            Auto allows esp_xiaozhi to prefer MQTT+UDP when both transports
+            are supplied by the server.
+
+        config XIAOZHI_APP_TRANSPORT_WEBSOCKET
+            bool "WebSocket"
+
+        config XIAOZHI_APP_TRANSPORT_AUTO
+            bool "Auto (prefer MQTT+UDP)"
+
+        config XIAOZHI_APP_TRANSPORT_MQTT
+            bool "MQTT+UDP"
+    endchoice
+
+endmenu
