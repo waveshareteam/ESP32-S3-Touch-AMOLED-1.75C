@@ -6,6 +6,7 @@
 
 | 文件 | 用途 |
 | --- | --- |
+| `ESP32-S3-Touch-AMOLED-1.75C_FactoryOnly_20261031.bin` | 出厂固件，适用于 ESP32-S3-Touch-AMOLED-1.75C，烧录地址 0x0 |
 | `ESP32-S3-Touch-AMOLED-1.75C_FactoryOnly_20260114.bin` | 出厂固件，恢复开箱演示 |
 
 用 esptool 烧录：
@@ -13,5 +14,5 @@
 ```bash
 python -m pip install esptool
 esptool.py --chip esp32s3 --port <PORT> erase_flash
-esptool.py --chip esp32s3 --port <PORT> write_flash 0x0 ESP32-S3-Touch-AMOLED-1.75C_FactoryOnly_20260114.bin
+esptool.py --chip esp32s3 --port <PORT> write_flash 0x0 ESP32-S3-Touch-AMOLED-1.75C_FactoryOnly_20261031.bin
 ```
