@@ -6,6 +6,7 @@ Ready-to-flash firmware tested on the ESP32-S3-Touch-AMOLED-1.75C board. Each fi
 
 | File | Purpose |
 | --- | --- |
+| `ESP32-S3-Touch-AMOLED-1.75C_FactoryOnly_20261031.bin` | Factory firmware, for ESP32-S3-Touch-AMOLED-1.75C, flash at 0x0 |
 | `ESP32-S3-Touch-AMOLED-1.75C_FactoryOnly_20260114.bin` | Factory firmware, restores the out-of-box demo |
 
 Flash with esptool:
@@ -13,5 +14,5 @@ Flash with esptool:
 ```bash
 python -m pip install esptool
 esptool.py --chip esp32s3 --port <PORT> erase_flash
-esptool.py --chip esp32s3 --port <PORT> write_flash 0x0 ESP32-S3-Touch-AMOLED-1.75C_FactoryOnly_20260114.bin
+esptool.py --chip esp32s3 --port <PORT> write_flash 0x0 ESP32-S3-Touch-AMOLED-1.75C_FactoryOnly_20261031.bin
 ```
